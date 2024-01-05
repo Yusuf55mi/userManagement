@@ -1,12 +1,11 @@
-// components/Buttons.tsx
 import styled from 'styled-components';
 
+// Define interface for the Button component
 interface ButtonProps {
   primary?: string;
 }
 
-const shouldForwardProp = (prop: string) => prop !== 'primary';
-
+// Define the percentage width for the button
 const buttonWidthPercentage = 30;
 
 const StyledButton = styled.button<ButtonProps>`

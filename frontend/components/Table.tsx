@@ -1,5 +1,6 @@
 import React from 'react';
 
+// User interface
 interface User {
   id: number;
   name: string;
@@ -7,14 +8,17 @@ interface User {
   email: string;
 }
 
+// Define interface for TableComponent
 interface TableComponentProps {
-  data: User[];
-  onEditClick: (id: number) => void;
+  data: User[]; // Array of User objects
+  onEditClick: (id: number) => void; // Callback function for edit button click
 }
 
 const TableComponent: React.FC<TableComponentProps> = ({ data, onEditClick }) => {
-    const columns = ['ID', 'Name', 'Surname', 'Email'];
+  // Define the columns for the table
+  const columns = ['ID', 'Name', 'Surname', 'Email'];
 
+  // Define inline styles
   const cellStyle: React.CSSProperties = {
     textAlign: 'center',
     border: '1px solid black',

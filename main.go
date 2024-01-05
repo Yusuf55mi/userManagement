@@ -1,4 +1,3 @@
-// main.go
 package main
 
 import (
@@ -9,14 +8,12 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rs/cors"
-
 	"github.com/gorilla/mux"
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/rs/cors"
 )
 
-var db *sql.DB
-
+// User data structure
 type User struct {
 	ID      int    `json:"id"`
 	Name    string `json:"name"`
@@ -24,6 +21,9 @@ type User struct {
 	Email   string `json:"email"`
 }
 
+var db *sql.DB
+
+// initialize the database and create "users" table if not exists
 func init() {
 	var err error
 	db, err = sql.Open("sqlite3", "users.db")
@@ -46,13 +46,15 @@ func init() {
 
 func main() {
 	router := mux.NewRouter()
+
+	// Define routes and their corresponding handler functions
 	router.HandleFunc("/api/users", getUsers).Methods("GET")
 	router.HandleFunc("/api/users/{id}", getUserByID).Methods("GET")
 	router.HandleFunc("/api/users", createUser).Methods("POST")
 	router.HandleFunc("/api/users/{id}", updateUser).Methods("PUT")
 	router.HandleFunc("/api/users/{id}", deleteUser).Methods("DELETE")
 
-	// Enable CORS
+	// Enable CORS for all routes
 	c := cors.AllowAll()
 	handler := c.Handler(router)
 
@@ -66,13 +68,13 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
-// REST API handlers...
-
+// getUsers handles the GET request for retrieving all users
 func getUsers(w http.ResponseWriter, r *http.Request) {
 	users := fetchUsers()
 	sendJSONResponse(w, users)
 }
 
+// getUserByID handles the GET request for retrieving a user by ID
 func getUserByID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -80,6 +82,7 @@ func getUserByID(w http.ResponseWriter, r *http.Request) {
 	sendJSONResponse(w, user)
 }
 
+// createUser handles the POST request for creating a new user
 func createUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	decodeJSONRequest(r, &user)
@@ -88,6 +91,7 @@ func createUser(w http.ResponseWriter, r *http.Request) {
 	sendJSONResponse(w, map[string]int{"id": id})
 }
 
+// updateUser handles the PUT request for updating a user by ID
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -98,6 +102,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	sendJSONResponse(w, map[string]string{"message": "User updated successfully"})
 }
 
+// deleteUser handles the DELETE request for deleting a user by ID
 func deleteUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -105,8 +110,7 @@ func deleteUser(w http.ResponseWriter, r *http.Request) {
 	sendJSONResponse(w, map[string]string{"message": "User deleted successfully"})
 }
 
-// Database operations...
-
+// fetchUsers retrieves all users from the database
 func fetchUsers() []User {
 	rows, err := db.Query("SELECT id, name, surname, email FROM users")
 	if err != nil {
@@ -127,6 +131,7 @@ func fetchUsers() []User {
 	return users
 }
 
+// fetchUserByID retrieves a user from the database by ID
 func fetchUserByID(id string) User {
 	var user User
 	err := db.QueryRow("SELECT id, name, surname, email FROM users WHERE id = ?", id).Scan(&user.ID, &user.Name, &user.Surname, &user.Email)
@@ -136,6 +141,7 @@ func fetchUserByID(id string) User {
 	return user
 }
 
+// insertUser inserts a new user into the database
 func insertUser(user User) int {
 	result, err := db.Exec("INSERT INTO users (name, surname, email) VALUES (?, ?, ?)", user.Name, user.Surname, user.Email)
 	if err != nil {
@@ -150,6 +156,7 @@ func insertUser(user User) int {
 	return int(id)
 }
 
+// updateUserByID updates a user in the database by ID
 func updateUserByID(id string, user User) {
 	_, err := db.Exec("UPDATE users SET name=?, surname=?, email=? WHERE id=?", user.Name, user.Surname, user.Email, id)
 	if err != nil {
@@ -157,6 +164,7 @@ func updateUserByID(id string, user User) {
 	}
 }
 
+// deleteUserByID deletes a user from the database by ID
 func deleteUserByID(id string) {
 	_, err := db.Exec("DELETE FROM users WHERE id=?", id)
 	if err != nil {
@@ -166,11 +174,13 @@ func deleteUserByID(id string) {
 
 // Helper functions...
 
+// sendJSONResponse sends a JSON response to the client
 func sendJSONResponse(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
 
+// decodeJSONRequest decodes the JSON request body into a given structure
 func decodeJSONRequest(r *http.Request, v interface{}) {
 	err := json.NewDecoder(r.Body).Decode(v)
 	if err != nil {
